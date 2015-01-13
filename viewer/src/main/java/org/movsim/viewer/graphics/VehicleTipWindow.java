@@ -2,25 +2,25 @@
  * Copyright (C) 2010, 2011, 2012 by Arne Kesting, Martin Treiber, Ralph Germ, Martin Budden
  *                                   <movsim.org@gmail.com>
  * -----------------------------------------------------------------------------------------
- * 
+ *
  * This file is part of
- * 
+ *
  * MovSim - the multi-model open-source vehicular-traffic simulator.
- * 
+ *
  * MovSim is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * MovSim is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with MovSim. If not, see <http://www.gnu.org/licenses/>
  * or <http://www.movsim.org>.
- * 
+ *
  * -----------------------------------------------------------------------------------------
  */
 package org.movsim.viewer.graphics;
@@ -32,6 +32,8 @@ import java.awt.Point;
 import java.awt.Window;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import javax.swing.JLabel;
 
 import org.movsim.simulator.vehicles.PhysicalQuantities;
 import org.movsim.simulator.vehicles.Vehicle;
@@ -85,10 +87,18 @@ class VehicleTipWindow extends Window {
             exitString = this.trafficCanvas.roadNetwork.findById(vehicle.exitRoadSegmentId()).userId();
         }
         final PhysicalQuantities vehiclePhysical = vehicle.physicalQuantities();
-        final String string = String.format(this.trafficCanvas.popupString, vehicle.getId(), vehicle.getLabel(),
-                    vehicle.lane(), vehiclePhysical.getFrontPosition(), vehiclePhysical.getSpeed()
-                            * Units.MS_TO_KMH, vehiclePhysical.getAcc(), vehicle.totalTravelDistance(), exitString);
-        final Label label = new Label(string, Label.LEFT);
+        // final String string = String.format(this.trafficCanvas.popupString, vehicle.getId(),
+        // , vehicle.getLabel(),
+        // vehicle.lane(), vehiclePhysical.getFrontPosition(), vehiclePhysical.getSpeed()
+        // * Units.MS_TO_KMH, vehiclePhysical.getAcc(), vehicle.totalTravelDistance(), exitString);
+        final String string = String.format(this.trafficCanvas.popupString,
+                vehicle.getAutoTopoId(),
+                vehicle.getScopeId(), vehicle.getLabel(),
+                vehicle.lane(),
+                vehicle.getAutoTopoLong(),
+                vehicle.getAutoTopoLat(), vehiclePhysical.getSpeed()
+                * Units.MS_TO_KMH, vehiclePhysical.getAcc(), vehicle.totalTravelDistance(), exitString);
+        final JLabel label = new JLabel(string, Label.LEFT);
         label.setBackground(new Color(200, 220, 240));
         removeAll();
         add(label);

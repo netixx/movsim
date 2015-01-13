@@ -14,13 +14,13 @@ import org.slf4j.LoggerFactory;
 public class ViewProperties {
 
     final static Logger logger = LoggerFactory.getLogger(ViewProperties.class);
-    
+
     final static String defaultPropertyName = "/config/defaultviewerconfig.properties";
     private static Properties defaultProperties;
 
     /**
      * Load default properties from the {code /config/defaultviewerconfig.properties} path. Needed for applet initialization.
-     * 
+     *
      * @return the properties
      */
     public static Properties loadDefaultProperties() {
@@ -42,7 +42,7 @@ public class ViewProperties {
         return defaultProperties;
     }
 
-    
+
     public static Properties loadProperties(ProjectMetaData projectMetaData) {
         if (projectMetaData.hasProjectName()) {
             return loadProperties(projectMetaData.getProjectName(), projectMetaData.getPathToProjectFile());
@@ -52,7 +52,7 @@ public class ViewProperties {
 
     /**
      * Load default properties and overwrites them with project specific properties if available
-     * 
+     *
      * @param projectName
      * @param path
      * @return properties
@@ -81,6 +81,6 @@ public class ViewProperties {
         }
         return applicationProps;
     }
-    
-    
+
+
 }
