@@ -42,6 +42,7 @@ import org.movsim.autogen.Parking;
 import org.movsim.autogen.Road;
 import org.movsim.autogen.Simulation;
 import org.movsim.autogen.TrafficSink;
+import org.movsim.autotopo.AutoTopoLink;
 import org.movsim.input.ProjectMetaData;
 import org.movsim.input.network.OpenDriveReader;
 import org.movsim.output.SimulationOutput;
@@ -112,6 +113,10 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
 
     public void initialize() throws JAXBException, SAXException {
         LOG.info("Copyright '\u00A9' by Arne Kesting, Martin Treiber, Ralph Germ and Martin Budden (2011-2013)");
+
+        // #AUTOTOPO
+        AutoTopoLink.reset();
+        AutoTopoLink.setSimulationRunnable(simulationRunnable);
 
         projectName = projectMetaData.getProjectName();
         // TODO temporary handling of Variable Message Sign until added to XML
@@ -521,5 +526,8 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
         if (simOutput != null) {
             simOutput.timeStep(dt, simulationTime, iterationCount);
         }
+
+        // #AUTOTOPO
+        AutoTopoLink.getInstance().timeStep(dt, simulationTime, iterationCount);
     }
 }

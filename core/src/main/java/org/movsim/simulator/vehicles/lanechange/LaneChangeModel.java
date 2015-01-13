@@ -25,6 +25,7 @@
  */
 package org.movsim.simulator.vehicles.lanechange;
 
+import org.movsim.autotopo.AutoTopoLink;
 import org.movsim.simulator.roadnetwork.LaneSegment;
 import org.movsim.simulator.roadnetwork.Lanes;
 import org.movsim.simulator.roadnetwork.RoadSegment;
@@ -33,6 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+
+import fr.netixx.AutoTopo.notifications.goals.LaneChangeGoal;
 
 /**
  * The Class LaneChangeModel.
@@ -217,7 +220,7 @@ public class LaneChangeModel {
         return false;
     }
 
-    private LaneChangeDecision determineDiscretionaryLaneChangeDirection(RoadSegment roadSegment) {
+    private LaneChangeDecision movsimDetermineDiscretionaryLaneChangeDirection(RoadSegment roadSegment) {
 
         final int currentLane = me.lane();
         // initialize with largest possible deceleration
@@ -256,7 +259,7 @@ public class LaneChangeModel {
         return LaneChangeDecision.STAY_IN_LANE;
     }
 
-    private LaneChangeDecision checkForMandatoryLaneChangeAtEntrance(RoadSegment roadSegment) {
+    private LaneChangeDecision movsimCheckForMandatoryLaneChangeAtEntrance(RoadSegment roadSegment) {
         final int currentLane = me.lane();
         final LaneSegment currentLaneSegment = roadSegment.laneSegment(currentLane);
 
@@ -404,5 +407,154 @@ public class LaneChangeModel {
         }
         return laneChangeDecision;
     }
+
+    /**
+     * #AUTOTOPO
+     * modification for changing lanes more intelligently
+     */
+
+    private LaneChangeDecision determineDiscretionaryLaneChangeDirection(RoadSegment roadSegment) {
+        final int currentLane = me.lane();
+        LaneChangeGoal laneChangeDecision = AutoTopoLink.getInstance().getLaneChangeGoal(me);
+        switch (laneChangeDecision) {
+        case STAY:
+            return LaneChangeDecision.STAY_IN_LANE;
+        case LEFT:
+            if (checkLaneChangeSafety(laneChangeDecision, roadSegment, currentLane)) {
+                return LaneChangeDecision.DISCRETIONARY_TO_LEFT;
+            }
+            return LaneChangeDecision.STAY_IN_LANE;
+        case RIGHT:
+            if (checkLaneChangeSafety(laneChangeDecision, roadSegment, currentLane)) {
+                return LaneChangeDecision.DISCRETIONARY_TO_RIGHT;
+            }
+            return LaneChangeDecision.STAY_IN_LANE;
+        case FREE:
+        default:
+            break;
+        }
+        return movsimDetermineDiscretionaryLaneChangeDirection(roadSegment);
+    }
+
+    private LaneChangeDecision checkForMandatoryLaneChangeAtEntrance(RoadSegment roadSegment) {
+        final int currentLane = me.lane();
+        final LaneSegment currentLaneSegment = roadSegment.laneSegment(currentLane);
+
+        if (currentLaneSegment.type() == Lanes.Type.ENTRANCE) {
+            final int direction = (currentLane == roadSegment.laneCount()) ? Lanes.TO_LEFT : Lanes.TO_RIGHT;
+            if (currentLane + direction >= Lanes.MOST_INNER_LANE) {
+                final LaneSegment newLaneSegment = roadSegment.laneSegment(currentLane + direction);
+                if (isSafeLaneChange(newLaneSegment)) {
+                    double distanceToRoadSegmentEnd = me.getDistanceToRoadSegmentEnd();
+                    if (distanceToRoadSegmentEnd < 0) {
+                        // just a hack. should not happen.
+                        LOG.info("check this: roadSegmentLength not set. Do mandatory lane change anyway.");
+                        return (direction == Lanes.TO_LEFT) ? LaneChangeDecision.MANDATORY_TO_LEFT
+                                : LaneChangeDecision.MANDATORY_TO_RIGHT;
+                    }
+                    // evaluate additional motivation to leave entrance lane
+                    double accInCurrentLane = me.getLongitudinalModel()
+                            .calcAcc(me, currentLaneSegment.frontVehicle(me));
+                    double accInNewLane = me.getLongitudinalModel().calcAcc(me, newLaneSegment.frontVehicle(me));
+                    double bias = biasForMandatoryChange(distanceToRoadSegmentEnd);
+                    double biasAutoTopo = biasForAutoTopoGoal(direction);
+                    if (accInNewLane + bias + biasAutoTopo > accInCurrentLane) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug(String
+                                    .format("change lane: veh.id=%d, distanceToRoadSegmentEnd=%.2f, accInCurrentLane=%.2f, accInNewLane=%.2f, bias=%.2f",
+                                            me.getId(), distanceToRoadSegmentEnd, accInCurrentLane, accInNewLane, bias));
+                        }
+                        return (direction == Lanes.TO_LEFT) ? LaneChangeDecision.MANDATORY_TO_LEFT
+                                : LaneChangeDecision.MANDATORY_TO_RIGHT;
+                    }
+                }
+            }
+            return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
+        }
+
+        return LaneChangeDecision.NONE;
+    }
+
+    // protected double biasForMandatoryChange(double distanceToRoadSegmentEnd) {
+    // final double interactionDistance = 10;
+    // double bias = me.getMaxDeceleration() * interactionDistance / Math.max(distanceToRoadSegmentEnd, 10.0);
+    // return bias;
+    // }
+
+    private static final double autoTopoBias = 1000;
+
+    protected double biasForAutoTopoGoal(int direction) {
+        LaneChangeGoal laneChangeGoal = AutoTopoLink.getInstance().getLaneChangeGoal(me);
+        // if they agree : + bias
+        if ((direction == Lanes.TO_LEFT && laneChangeGoal == LaneChangeGoal.LEFT)
+                || (direction == Lanes.TO_RIGHT && laneChangeGoal == LaneChangeGoal.RIGHT)) {
+            return autoTopoBias;
+        } else if ((direction == Lanes.TO_LEFT && laneChangeGoal == LaneChangeGoal.RIGHT)
+                || (direction == Lanes.TO_RIGHT && laneChangeGoal == LaneChangeGoal.LEFT)) {
+            // if they disagree : - bias
+            return -autoTopoBias;
+        }
+        return 0;
+    }
+
+    private boolean checkLaneChangeSafety(LaneChangeGoal direction, RoadSegment roadSegment, int currentLane) {
+        // if (direction != LaneChangeGoal.LEFT || direction != LaneChangeGoal.RIGHT) {
+        // return true;
+        // }
+        int dir = 0;
+        if (direction == LaneChangeGoal.LEFT) {
+            if (!(currentLane + Lanes.TO_LEFT >= Lanes.MOST_INNER_LANE)) {
+                return false;
+            }
+            dir = Lanes.TO_LEFT;
+        } else if (direction == LaneChangeGoal.RIGHT) {
+            if (!(currentLane + Lanes.TO_RIGHT <= roadSegment.trafficLaneMax())) {
+                return false;
+            }
+            dir = Lanes.TO_RIGHT;
+        }
+
+        return isSafeLaneChange(roadSegment.laneSegment(currentLane + dir));
+        // return lcModelMOBIL.calcAccelerationBalance(me, dir, roadSegment) > 0
+    }
+
+    // protected LaneChangeDecision determineDiscretionaryLaneChangeDirection(RoadSegment roadSegment) {
+    //
+    // final int currentLane = me.lane();
+    // // initialize with largest possible deceleration
+    // double accToLeft = -Double.MAX_VALUE;
+    // double accToRight = -Double.MAX_VALUE;
+    // // consider lane-changing to right-hand side lane
+    // if (currentLane + Lanes.TO_RIGHT <= roadSegment.trafficLaneMax()) {
+    // final LaneSegment newLaneSegment = roadSegment.laneSegment(currentLane + Lanes.TO_RIGHT);
+    // if (newLaneSegment.type() == Lanes.Type.TRAFFIC) {
+    // // only consider lane changes into traffic lanes, other lane changes are handled by mandatory lane
+    // // changing
+    // accToRight = lcModelMOBIL.calcAccelerationBalance(me, Lanes.TO_RIGHT, roadSegment);
+    // }
+    // }
+    //
+    // // consider lane-changing to left-hand side lane
+    // if (currentLane + Lanes.TO_LEFT >= Lanes.MOST_INNER_LANE) {
+    // final LaneSegment newLaneSegment = roadSegment.laneSegment(currentLane + Lanes.TO_LEFT);
+    // if (newLaneSegment.type() == Lanes.Type.TRAFFIC) {
+    // // only consider lane changes into traffic lanes, other lane changes are handled by mandatory lane
+    // // changing
+    // accToLeft = lcModelMOBIL.calcAccelerationBalance(me, Lanes.TO_LEFT, roadSegment);
+    // }
+    // }
+    //
+    // // decision
+    // if ((accToRight > 0) || (accToLeft > 0)) {
+    // LOG.debug("accToRight={}, accToLeft={}", accToRight, accToLeft);
+    // LOG.debug("currentLane={}", currentLane);
+    // if (accToRight > accToLeft) {
+    // return LaneChangeDecision.DISCRETIONARY_TO_RIGHT;
+    // }
+    // return LaneChangeDecision.DISCRETIONARY_TO_LEFT;
+    // }
+    //
+    // return LaneChangeDecision.STAY_IN_LANE;
+    // }
 
 }

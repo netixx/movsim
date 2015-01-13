@@ -25,10 +25,13 @@
  */
 package org.movsim.simulator.vehicles;
 
+import java.awt.Color;
+
 import javax.annotation.Nullable;
 
 import org.movsim.autogen.VehiclePrototypeConfiguration;
 import org.movsim.consumption.model.EnergyFlowModel;
+import org.movsim.roadmappings.RoadMapping.PolygonFloat;
 import org.movsim.simulator.MovsimConstants;
 import org.movsim.simulator.roadnetwork.LaneSegment;
 import org.movsim.simulator.roadnetwork.Lanes;
@@ -48,6 +51,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+
+import fr.netixx.AutoTopo.adapters.IVehicleAdapter;
+import fr.netixx.AutoTopo.adapters.IVehicleRevAdapter;
+import fr.netixx.AutoTopo.adapters.impl.movsim.ScopeDecorator;
 
 /**
  * <p>
@@ -78,7 +85,7 @@ import com.google.common.base.Preconditions;
  * Vehicles are quite frequently created and destroyed, so by design they have few allocated properties.
  * </p>
  */
-public class Vehicle {
+public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
 
     /** The Constant LOG. */
     private static final Logger LOG = LoggerFactory.getLogger(Vehicle.class);
@@ -1215,4 +1222,88 @@ public class Vehicle {
         this.route = route;
     }
 
+    /**
+     * #AUTOTOPO Vehicle modification
+     */
+
+
+
+    private PolygonFloat realPosition;
+
+    private boolean isLeader = false;
+    public static Color leaderColor = Color.BLACK;
+    private int scopeId;
+
+    private int autoTopoId;
+
+    public static final int SCOPE_NONE = 0;
+
+    public void updateRealPosition(RoadSegment roadSegment, double simulationTime) {
+        realPosition = roadSegment.roadMapping().mapFloat(this, simulationTime);
+    }
+
+    @Override
+    public double getLong() {
+        return realPosition.xPoints[0];
+        // return getFrontPosition();
+    }
+
+    @Override
+    public double getLat() {
+        float[] yPoints = realPosition.yPoints;
+        return (yPoints[0] + yPoints[1]) / 2;
+        // return getContinousLane();
+    }
+
+    @Override
+    public void setScopeId(final int scopeId) {
+        this.scopeId = scopeId;
+        setColor(ScopeDecorator.idToRgb(scopeId));
+    }
+
+    @Override
+    public void setIsLeader(boolean isLeader) {
+        this.isLeader = isLeader;
+    }
+
+    @Override
+    public double getSize() {
+        return (this.getLength() * this.getWidth());
+    }
+
+    public boolean isLeader() {
+        return isLeader;
+    }
+
+    @Override
+    public int getScopeId() {
+        return this.scopeId;
+    }
+
+    @Override
+    public double getAutoTopoLat() {
+        return this.getLat();
+    }
+
+    @Override
+    public double getAutoTopoLong() {
+        return this.getLong();
+    }
+
+    @Override
+    public int getAutoTopoId() {
+        return autoTopoId;
+    }
+
+    @Override
+    public void setAutoTopoId(int id) {
+        autoTopoId = id;
+
+    }
+
+    @Override
+    public int getLane() {
+        return lane();
+
+    }
 }

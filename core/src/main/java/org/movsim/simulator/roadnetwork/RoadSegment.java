@@ -850,6 +850,13 @@ public class RoadSegment extends DefaultWeightedEdge implements Iterable<Vehicle
             assert laneSegment.laneIsSorted();
             for (final Vehicle vehicle : laneSegment) {
                 vehicle.updatePositionAndSpeed(dt);
+                // #AUTOTOPO
+                vehicle.updateRealPosition(this, simulationTime);
+                // if (vehicle instanceof AutoTopoVehicle) {
+                // // needed to calculate actual absolute position
+                // ((AutoTopoVehicle) vehicle).setRoadSegment(this);
+                // ((AutoTopoVehicle) vehicle).setSimulationTime(simulationTime);
+                // }
             }
         }
     }

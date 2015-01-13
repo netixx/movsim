@@ -2,6 +2,7 @@ package org.movsim.simulator.roadnetwork;
 
 import javax.annotation.Nullable;
 
+import org.movsim.autotopo.AutoTopoLink;
 import org.movsim.simulator.SimulationTimeStep;
 import org.movsim.simulator.vehicles.TestVehicle;
 import org.movsim.simulator.vehicles.TrafficCompositionGenerator;
@@ -108,6 +109,11 @@ public abstract class AbstractTrafficSource implements SimulationTimeStep {
     protected Vehicle addVehicle(LaneSegment laneSegment, TestVehicle testVehicle, double frontPosition, double speed) {
         final Vehicle vehicle = vehGenerator.createVehicle(testVehicle);
         initVehicle(laneSegment, frontPosition, speed, vehicle);
+        // System.out.println("Insert vh " + vehicle.getId() + "@" + vehicle.getFrontPosition());
+        // #AUTOTOPO
+        // TODO: AUTOTOPO change!
+        vehicle.updateRealPosition(laneSegment.roadSegment(), AutoTopoLink.getInstance().simulationTime());
+        AutoTopoLink.getInstance().addVehicle(vehicle);
         return vehicle;
     }
 

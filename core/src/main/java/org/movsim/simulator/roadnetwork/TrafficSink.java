@@ -27,6 +27,7 @@
 package org.movsim.simulator.roadnetwork;
 
 import org.movsim.autogen.Parking;
+import org.movsim.autotopo.AutoTopoLink;
 import org.movsim.simulator.SimulationTimeStep;
 import org.movsim.simulator.vehicles.Vehicle;
 import org.movsim.utilities.Units;
@@ -137,6 +138,8 @@ public class TrafficSink implements SimulationTimeStep {
         totalVehicleTravelTime += vehicle.totalTravelTime();
         totalVehicleFuelUsedLiters += vehicle.totalFuelUsedLiters();
         ++totalVehiclesRemoved;
+        // #AUTOTOPO
+        AutoTopoLink.getInstance().removeVehicle(vehicle);
     }
 
     /**
