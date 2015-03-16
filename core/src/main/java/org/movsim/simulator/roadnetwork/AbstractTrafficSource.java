@@ -7,6 +7,7 @@ import org.movsim.simulator.SimulationTimeStep;
 import org.movsim.simulator.vehicles.TestVehicle;
 import org.movsim.simulator.vehicles.TrafficCompositionGenerator;
 import org.movsim.simulator.vehicles.Vehicle;
+import org.movsim.statistics.TravelTime;
 import org.movsim.utilities.Units;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,6 +115,7 @@ public abstract class AbstractTrafficSource implements SimulationTimeStep {
         // TODO: AUTOTOPO change!
         vehicle.updateRealPosition(laneSegment.roadSegment(), AutoTopoLink.getInstance().simulationTime());
         AutoTopoLink.getInstance().addVehicle(vehicle);
+        TravelTime.getInstance().recordEntry(vehicle, AutoTopoLink.getInstance().simulationTime());
         return vehicle;
     }
 

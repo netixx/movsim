@@ -25,6 +25,8 @@
  */
 package org.movsim.simulator;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
@@ -68,6 +70,9 @@ import org.movsim.simulator.vehicles.TestVehicle;
 import org.movsim.simulator.vehicles.TrafficCompositionGenerator;
 import org.movsim.simulator.vehicles.Vehicle;
 import org.movsim.simulator.vehicles.VehicleFactory;
+import org.movsim.statistics.Acceleration;
+import org.movsim.statistics.Speed;
+import org.movsim.statistics.TravelTime;
 import org.movsim.utilities.MyRandom;
 import org.movsim.utilities.Units;
 import org.movsim.xml.MovsimInputLoader;
@@ -116,7 +121,7 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
 
         // #AUTOTOPO
         AutoTopoLink.reset();
-        AutoTopoLink.setSimulationRunnable(simulationRunnable);
+        AutoTopoLink.getInstance().setSimulationRunnable(simulationRunnable);
 
         projectName = projectMetaData.getProjectName();
         // TODO temporary handling of Variable Message Sign until added to XML
@@ -139,6 +144,9 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
         final boolean loadedRoadNetwork = parseOpenDriveXml(roadNetwork, projectMetaData);
         routing = new Routing(inputData.getScenario().getRoutes(), roadNetwork);
         
+        // #AUTOTOPO
+        AutoTopoLink.getInstance().setRouting(routing);
+
         vehicleFactory = new VehicleFactory(simulationInput.getTimestep(), inputData.getVehiclePrototypes(),
                 inputData.getConsumption(), routing);
 
@@ -431,6 +439,8 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
                     LOG.debug("add vehicle from macroscopic initial conditions at pos={} with speed={}.", position,
                             speedInit);
                     roadSegment.addVehicle(veh);
+                    // #AUTOTOPO
+                    AutoTopoLink.getInstance().addVehicle(veh);
                 } else {
                     LOG.debug("cannot add vehicle due to gap constraints at pos={} with speed={}.", position, speedInit);
                 }
@@ -510,6 +520,27 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
         LOG.info(String.format(
                 "time elapsed = %.3fs --> simulation time warp = %.2f, time per 1000 update steps=%.3fs", elapsedTime,
                 simulationTime / elapsedTime, 1000 * elapsedTime / simulationRunnable.iterationCount()));
+        String stat = String.format(
+                "Total Travel Time : %10.0fs, Total Fuel : %10.2fl, Total Travel Distance : %10.0fkm",
+                roadNetwork.totalVehicleTravelTime(), roadNetwork.totalVehicleFuelUsedLiters(),
+                roadNetwork.totalVehicleTravelDistance() * Units.M_TO_KM
+);
+        LOG.info(String.format("Total Travel Time : %10.0fs, Total Fuel : %10.2fl, Total Travel Distance : %10.0fkm",
+                roadNetwork.totalVehicleTravelTime(), roadNetwork.totalVehicleFuelUsedLiters(),
+                roadNetwork.totalVehicleTravelDistance() * Units.M_TO_KM));
+        LOG.error(String.format("%f;%f;%f;%f;%f", roadNetwork.totalVehicleTravelTime(),
+                roadNetwork.totalVehicleTravelDistance() * Units.M_TO_KM, roadNetwork.totalVehicleFuelUsedLiters(),
+                roadNetwork.totalVehiclePlusAcceleration(), roadNetwork.totalVehicleMinusAcceleration()));
+
+        // TODO : write to csv
+        Path speedPath = Paths.get(projectMetaData.getOutputPath() + "/speed.csv");
+        Path travelTimePath = Paths.get(projectMetaData.getOutputPath() + "/time.csv");
+        Path accPath = Paths.get(projectMetaData.getOutputPath() + "/acceleration.csv");
+        Speed.getInstance().toCsv(speedPath);
+        TravelTime.getInstance().toCsv(travelTimePath);
+        Acceleration.getInstance().toCsv(accPath);
+
+        AutoTopoLink.getInstance().writeStats();
     }
 
     @Override

@@ -30,6 +30,7 @@ import org.movsim.autogen.Parking;
 import org.movsim.autotopo.AutoTopoLink;
 import org.movsim.simulator.SimulationTimeStep;
 import org.movsim.simulator.vehicles.Vehicle;
+import org.movsim.statistics.TravelTime;
 import org.movsim.utilities.Units;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,13 +134,28 @@ public class TrafficSink implements SimulationTimeStep {
         return totalVehicleFuelUsedLiters;
     }
     
+    private double totalVehiclePlusAcceleration;
+    private double totalVehicleMinusAcceleration;
+
+    public final double totalVehiclePlusAcceleration() {
+        return totalVehiclePlusAcceleration;
+    }
+
+    public final double totalVehicleMinusAcceleration() {
+        return totalVehicleMinusAcceleration;
+    }
+
     void recordRemovedVehicle(Vehicle vehicle) {
         totalVehicleTravelDistance += vehicle.totalTravelDistance();
         totalVehicleTravelTime += vehicle.totalTravelTime();
         totalVehicleFuelUsedLiters += vehicle.totalFuelUsedLiters();
+        totalVehiclePlusAcceleration += vehicle.totalPlusAcceleration();
+        totalVehicleMinusAcceleration += vehicle.totalMinusAcceleration();
         ++totalVehiclesRemoved;
         // #AUTOTOPO
         AutoTopoLink.getInstance().removeVehicle(vehicle);
+        TravelTime.getInstance().recordExit(vehicle, AutoTopoLink.getInstance().simulationTime());
+
     }
 
     /**

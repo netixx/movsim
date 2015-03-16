@@ -65,7 +65,8 @@ public abstract class LongitudinalModelBase {
                 ModelCategory.ITERATED_COUPLED_MAP_MODEL, "Krauss-Model"), NSM(ModelCategory.CELLULAR_AUTOMATON,
                 "Nagel-Schreckenberg-Model / Barlovic-Model"), KKW(ModelCategory.CELLULAR_AUTOMATON,
                 "Kerner-Klenov-Wolf-Model"), CCS(ModelCategory.TIME_CONTINUOUS_MODEL, "Cross-Country-Skiing-Model"), PTM(
-                ModelCategory.TIME_CONTINUOUS_MODEL, "Prospect-Theory Model");
+                ModelCategory.TIME_CONTINUOUS_MODEL, "Prospect-Theory Model"), AT(ModelCategory.TIME_CONTINUOUS_MODEL,
+                "AutoTopo driver Model");
 
         private final ModelCategory modelCategory;
 

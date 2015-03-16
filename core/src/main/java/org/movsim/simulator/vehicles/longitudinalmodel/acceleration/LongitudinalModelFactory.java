@@ -66,6 +66,8 @@ public class LongitudinalModelFactory {
             longModel = new CCS(longitudinalModelType.getModelParameterCCS(), vehLength);
         } else if (longitudinalModelType.isSetModelParameterPTM()) {
             longModel = new PTM(simulationTimestep, longitudinalModelType.getModelParameterPTM());
+        } else if (longitudinalModelType.isSetModelParameterAT()) {
+            longModel = new AutoTopoModel(longitudinalModelType.getModelParameterAT());
         } else {
             throw new IllegalArgumentException("unknown acceleration model=" + longitudinalModelType.toString());
         }

@@ -54,6 +54,8 @@ public class EquilibriumPropertiesFactory {
             return new EquilibriumKKW(vehLength, (KKW) longModel);
         } else if (longModel.modelName() == ModelName.CCS) {
             return new EquilibriumCCS(vehLength, (CCS) longModel);
+        } else if (longModel.modelName() == ModelName.AT) {
+            return new EquilibriumAT(vehLength, (AutoTopoModel) longModel);
         } else {
             logger.error("no fundamental diagram constructed for model {}. exit.", longModel.modelName().name());
             System.exit(0);

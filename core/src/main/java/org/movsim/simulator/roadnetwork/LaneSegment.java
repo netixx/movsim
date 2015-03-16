@@ -225,6 +225,22 @@ public class LaneSegment implements Iterable<Vehicle> {
         return totalVehicleTravelDistance;
     }
 
+    public double totalVehiclePlusAcceleration() {
+        double totalVehiclePlusAcceleration = 0;
+        for (final Vehicle vehicle : vehicles) {
+            totalVehiclePlusAcceleration += vehicle.totalPlusAcceleration();
+        }
+        return totalVehiclePlusAcceleration;
+    }
+
+    public double totalVehicleMinusAcceleration() {
+        double totalVehicleMinusAcceleration = 0;
+        for (final Vehicle vehicle : vehicles) {
+            totalVehicleMinusAcceleration += vehicle.totalMinusAcceleration();
+        }
+        return totalVehicleMinusAcceleration;
+    }
+
     /**
      * Returns the total fuel used by all vehicles on this lane segment.
      * 
@@ -785,5 +801,6 @@ public class LaneSegment implements Iterable<Vehicle> {
         return "LaneSegment [sinkLaneSegment=" + sinkLaneSegment + ", sourceLaneSegment=" + sourceLaneSegment
                 + ", lane=" + lane + ", type=" + type + ", removedVehicleCount=" + removedVehicleCount + "]";
     }
+
 
 }

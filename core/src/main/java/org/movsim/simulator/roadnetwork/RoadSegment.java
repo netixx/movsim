@@ -42,6 +42,7 @@ import org.movsim.roadmappings.RoadMapping;
 import org.movsim.simulator.MovsimConstants;
 import org.movsim.simulator.trafficlights.TrafficLightLocation;
 import org.movsim.simulator.vehicles.Vehicle;
+import org.movsim.statistics.Acceleration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -507,6 +508,22 @@ public class RoadSegment extends DefaultWeightedEdge implements Iterable<Vehicle
         return totalVehicleTravelDistance;
     }
 
+    protected double totalVehiclePlusAcceleration() {
+        double totalVehicleAcceleration = 0;
+        for (final LaneSegment laneSegment : laneSegments) {
+            totalVehicleAcceleration += laneSegment.totalVehiclePlusAcceleration();
+        }
+        return totalVehicleAcceleration;
+    }
+
+    protected double totalVehicleMinusAcceleration() {
+        double totalVehicleAcceleration = 0;
+        for (final LaneSegment laneSegment : laneSegments) {
+            totalVehicleAcceleration += laneSegment.totalVehicleMinusAcceleration();
+        }
+        return totalVehicleAcceleration;
+    }
+
     /**
      * Returns the total fuel used by all vehicles on this road segment, all lanes.
      * 
@@ -831,6 +848,7 @@ public class RoadSegment extends DefaultWeightedEdge implements Iterable<Vehicle
                 // LOG.debug("alphaT={}, alphaV0={}", alphaT, alphaV0);
                 // TODO hack for testing acceleration behavior to exit
                 vehicle.updateAcceleration(dt, this, laneSegment, leftLaneSegment, alphaT, alphaV0);
+                Acceleration.getInstance().log(vehicle, vehicle.getAcc());
             }
         }
     }
@@ -852,6 +870,8 @@ public class RoadSegment extends DefaultWeightedEdge implements Iterable<Vehicle
                 vehicle.updatePositionAndSpeed(dt);
                 // #AUTOTOPO
                 vehicle.updateRealPosition(this, simulationTime);
+                vehicle.routeDetermineExitRoadSegmentId();
+                org.movsim.statistics.Speed.getInstance().log(vehicle, vehicle.getSpeed());
                 // if (vehicle instanceof AutoTopoVehicle) {
                 // // needed to calculate actual absolute position
                 // ((AutoTopoVehicle) vehicle).setRoadSegment(this);

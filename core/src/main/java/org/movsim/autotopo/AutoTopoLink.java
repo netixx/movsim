@@ -4,16 +4,21 @@ import java.io.IOException;
 
 import org.movsim.simulator.SimulationRunnable;
 import org.movsim.simulator.SimulationTimeStep;
+import org.movsim.simulator.roadnetwork.routing.Route;
+import org.movsim.simulator.roadnetwork.routing.Routing;
 import org.movsim.simulator.vehicles.Vehicle;
 
 import fr.netixx.AutoTopo.adapters.IVehicleAdapter;
 import fr.netixx.AutoTopo.adapters.impl.movsim.AutoTopoMovsimController;
+import fr.netixx.AutoTopo.notifications.goals.AccelerationGoal;
 import fr.netixx.AutoTopo.notifications.goals.LaneChangeGoal;
+import fr.netixx.AutoTopo.notifications.goals.SpeedGoal;
 
 public class AutoTopoLink implements SimulationTimeStep {
 
     private final double precision = 0.00001;
-    private final double interval = 1;
+    // private final double interval = 0.5;
+    private static final int dtInterval = 10;
 
     private final int autoTopoStart = 0;
 
@@ -44,33 +49,23 @@ public class AutoTopoLink implements SimulationTimeStep {
         instance = null;
     }
 
-    private static SimulationRunnable simulationRunnable;
+    private SimulationRunnable simulationRunnable;
 
-    public static void setSimulationRunnable(SimulationRunnable sim) {
+    public void setSimulationRunnable(SimulationRunnable sim) {
         simulationRunnable = sim;
     }
 
-    public static double simulationTime() {
+    public double simulationTime() {
         return simulationRunnable.simulationTime();
     }
 
     int count = 0;
     @Override
     public void timeStep(double dt, double simulationTime, long iterationCount) {
-        // if (vehicle instanceof AutoTopoVehicle) {
-        // // needed to calculate actual absolute position
-        // ((AutoTopoVehicle) vehicle).setRoadSegment(this);
-        // ((AutoTopoVehicle) vehicle).setSimulationTime(simulationTime);
-        // }
-
-        // System.out.println(simulationTime % 5);
-        // controller.manageTopo();
-        if (++count * dt % interval < precision) {
-            System.out.println("AutoTopo at " + simulationTime);
+        controller.timeStep(simulationTime);
+        if (++count % dtInterval < precision) {
+            // System.out.println("AutoTopo at " + simulationTime);
             // controller.aggregate();
-            if (simulationTime >= autoTopoStart) {
-                controller.manageTopo();
-            }
             if (!controller.checkTopo()) {
                 try {
                     System.in.read();
@@ -85,6 +80,32 @@ public class AutoTopoLink implements SimulationTimeStep {
 
     public LaneChangeGoal getLaneChangeGoal(IVehicleAdapter me) {
         return controller.getLaneChangeGoal(me);
+    }
+
+    public SpeedGoal getSpeedGoal(IVehicleAdapter vh) {
+        return controller.getSpeedGoal(vh);
+    }
+
+    public AccelerationGoal getAccelerationGoal(IVehicleAdapter vh) {
+        return controller.getAccelerationGoal(vh);
+    }
+
+    private Routing routing;
+
+    public void setRouting(Routing routing) {
+        this.routing = routing;
+    }
+
+    public Route getRouteByName(String routeName) {
+        if (routing.hasRoute(routeName)) {
+            return routing.get(routeName);
+        }
+        return null;
+    }
+
+    public void writeStats() {
+        controller.writeStats();
+
     }
 
 }

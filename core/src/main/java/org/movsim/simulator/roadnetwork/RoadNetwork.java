@@ -374,6 +374,28 @@ public class RoadNetwork implements SimulationTimeStep, Iterable<RoadSegment> {
         return totalVehicleTravelDistance;
     }
 
+    public double totalVehiclePlusAcceleration() {
+        double totalVehicleAcceleration = 0.0;
+        for (RoadSegment roadSegment : roadSegments) {
+            totalVehicleAcceleration += roadSegment.totalVehiclePlusAcceleration();
+            if (roadSegment.sink() != null) {
+                totalVehicleAcceleration += roadSegment.sink().totalVehiclePlusAcceleration();
+            }
+        }
+        return totalVehicleAcceleration;
+    }
+
+    public double totalVehicleMinusAcceleration() {
+        double totalVehicleAcceleration = 0.0;
+        for (RoadSegment roadSegment : roadSegments) {
+            totalVehicleAcceleration += roadSegment.totalVehicleMinusAcceleration();
+            if (roadSegment.sink() != null) {
+                totalVehicleAcceleration += roadSegment.sink().totalVehicleMinusAcceleration();
+            }
+        }
+        return totalVehicleAcceleration;
+    }
+
     public static double totalVehicleTravelDistance(Route route) {
         double totalVehicleTravelDistance = 0.0;
         for (final RoadSegment roadSegment : route) {

@@ -30,6 +30,7 @@ import java.awt.Color;
 import javax.annotation.Nullable;
 
 import org.movsim.autogen.VehiclePrototypeConfiguration;
+import org.movsim.autotopo.AutoTopoLink;
 import org.movsim.consumption.model.EnergyFlowModel;
 import org.movsim.roadmappings.RoadMapping.PolygonFloat;
 import org.movsim.simulator.MovsimConstants;
@@ -45,6 +46,7 @@ import org.movsim.simulator.vehicles.longitudinalmodel.Memory;
 import org.movsim.simulator.vehicles.longitudinalmodel.TrafficLightApproaching;
 import org.movsim.simulator.vehicles.longitudinalmodel.acceleration.LongitudinalModelBase;
 import org.movsim.simulator.vehicles.longitudinalmodel.acceleration.LongitudinalModelBase.ModelName;
+import org.movsim.statistics.TravelTime;
 import org.movsim.utilities.Colors;
 import org.movsim.utilities.MyRandom;
 import org.slf4j.Logger;
@@ -52,9 +54,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import fr.netixx.AutoTopo.adapters.IDirection;
 import fr.netixx.AutoTopo.adapters.IVehicleAdapter;
 import fr.netixx.AutoTopo.adapters.IVehicleRevAdapter;
 import fr.netixx.AutoTopo.adapters.impl.movsim.ScopeDecorator;
+import fr.netixx.AutoTopo.notifications.aggregation.Direction;
 
 /**
  * <p>
@@ -133,6 +137,9 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
     private double totalTravelDistance;
     private double totalTravelTime;
     private double totalFuelUsedLiters;
+
+    private double totalPlusAcceleration;
+    private double totalMinusAcceleration;
 
     private double speed;
 
@@ -624,6 +631,13 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
         acc = moderateAcceleration(accModel, roadSegment);
 
         acc = Math.max(acc + accError, -maxDeceleration); // limited to maximum deceleration
+
+        if (acc > 0) {
+            totalPlusAcceleration += acc;
+        } else if (acc < 0) {
+            totalMinusAcceleration += acc;
+        }
+        // CumulattedAcceleration.getInstance().log(this, acc);
     }
 
     /**
@@ -742,6 +756,7 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
      */
     public void updatePositionAndSpeed(double dt) {
         totalTravelTime += dt;
+        TravelTime.getInstance().log(this, dt);
         frontPositionOld = frontPosition;
         if (longitudinalModel != null && longitudinalModel.isCA()) {
             speed = (int) (speed + dt * acc + 0.5);
@@ -1009,7 +1024,7 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
      * @param roadSegmentLength
      * 
      */
-    
+
     int routeIndex = 0;
 
     public final void setRoadSegment(int roadSegmentId, double roadSegmentLength) {
@@ -1156,6 +1171,14 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
         return totalFuelUsedLiters;
     }
 
+    public final double totalPlusAcceleration() {
+        return totalPlusAcceleration;
+    }
+
+    public final double totalMinusAcceleration() {
+        return totalMinusAcceleration;
+    }
+
     public double getMaxDeceleration() {
         return maxDeceleration;
     }
@@ -1226,9 +1249,10 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
      * #AUTOTOPO Vehicle modification
      */
 
+    private double xPosition;
+    private double yPosition;
 
-
-    private PolygonFloat realPosition;
+    private IDirection direction;
 
     private boolean isLeader = false;
     public static Color leaderColor = Color.BLACK;
@@ -1239,20 +1263,24 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
     public static final int SCOPE_NONE = 0;
 
     public void updateRealPosition(RoadSegment roadSegment, double simulationTime) {
-        realPosition = roadSegment.roadMapping().mapFloat(this, simulationTime);
+        PolygonFloat realPosition = roadSegment.roadMapping().mapFloat(this, simulationTime);
+        xPosition = realPosition.xPoints[0];
+        yPosition = (realPosition.yPoints[0] + realPosition.yPoints[1]) / 2;
+        // just to be sure
+        IDirection d = roadSegment.roadMapping().mapTheta(this, simulationTime);
+        direction = new Direction(d.cosTheta(), d.sinTheta());
     }
+
 
     @Override
     public double getLong() {
-        return realPosition.xPoints[0];
+        return xPosition;
         // return getFrontPosition();
     }
 
     @Override
     public double getLat() {
-        float[] yPoints = realPosition.yPoints;
-        return (yPoints[0] + yPoints[1]) / 2;
-        // return getContinousLane();
+        return yPosition;
     }
 
     @Override
@@ -1304,6 +1332,83 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
     @Override
     public int getLane() {
         return lane();
+    }
 
+    @Override
+    public void changeRoute(String routeName) {
+        this.setRoute(AutoTopoLink.getInstance().getRouteByName(routeName));
+        this.routeDetermineExitRoadSegmentId();
+        // this.determineExitRoadSegmentId();
+        // System.out.println(exitRoadSegmentId);
+    }
+
+    public void routeDetermineExitRoadSegmentId() {
+        // assume this vehicle does not exit on this road segment
+        if (roadSegmentId != exitRoadSegmentId) {
+            exitRoadSegmentId = ROAD_SEGMENT_ID_NOT_SET;
+        }
+
+//        int routeIndex = 0;
+        if (route != null && routeIndex < route.size()) {
+            int routeIndex = findCurrentIndexOnRoute();
+            if (routeIndex >= 0) {
+                // this vehicle is on the route
+                final RoadSegment routeRoadSegment = route.get(routeIndex);
+                // final RoadSegment routeRoadSegment = route.get(routeIndex);
+                // ++routeIndex;
+                // if (routeRoadSegment.id() == roadSegmentId) {
+                // this vehicle is on the route
+                if (routeIndex < route.size()) {
+                    // there is another roadSegment on the route
+                    // so check if the next roadSegment is joined to an exit lane
+                    // of the current roadSegment
+                    final RoadSegment nextRouteRoadSegment = route.get(routeIndex);
+                    if (routeRoadSegment.exitsOnto(nextRouteRoadSegment.id())) {
+                        // this vehicle needs to exit on this roadSegment
+                        exitRoadSegmentId = roadSegmentId;
+                    } else {
+                        if (routeIndex + 1 < route.size()) {
+                            // there is another roadSegment on the route
+                            // so check if the next roadSegment is joined to an exit lane
+                            // of the current roadSegment
+                            final RoadSegment nextNextRouteRoadSegment = route.get(routeIndex + 1);
+                            if (nextRouteRoadSegment.exitsOnto(nextNextRouteRoadSegment.id())) {
+                                // this vehicle needs to exit on this roadSegment
+                                exitRoadSegmentId = roadSegmentId;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private int findCurrentIndexOnRoute() {
+        int routeIndex = 0;
+        for (RoadSegment roadSegment : route) {
+            if (roadSegmentId == roadSegment.id()) {
+                return routeIndex;
+            }
+            ++routeIndex;
+        }
+        return -1;
+    }
+
+    @Override
+    public String getRouteName() {
+        if (this.route == null) {
+            return null;
+        }
+        return this.route.getName();
+    }
+
+    @Override
+    public IDirection getDirection() {
+        return direction;
+    }
+
+    @Override
+    public double getAcceleration() {
+        return this.getAcc();
     }
 }

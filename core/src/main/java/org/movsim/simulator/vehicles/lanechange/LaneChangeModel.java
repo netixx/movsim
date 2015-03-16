@@ -28,6 +28,7 @@ package org.movsim.simulator.vehicles.lanechange;
 import org.movsim.autotopo.AutoTopoLink;
 import org.movsim.simulator.roadnetwork.LaneSegment;
 import org.movsim.simulator.roadnetwork.Lanes;
+import org.movsim.simulator.roadnetwork.Lanes.Type;
 import org.movsim.simulator.roadnetwork.RoadSegment;
 import org.movsim.simulator.vehicles.Vehicle;
 import org.slf4j.Logger;
@@ -303,23 +304,47 @@ public class LaneChangeModel {
         return bias;
     }
 
+    private int getExitLane(RoadSegment roadSegment) {
+        for (LaneSegment laneSegment : roadSegment.laneSegments()) {
+            if (laneSegment.type() == Type.EXIT) {
+                return laneSegment.lane();
+            }
+        }
+        return -1;
+    }
+
+    private static LaneChangeDecision directionToMandatoryDecision(int direction) {
+        if (direction == Lanes.TO_RIGHT) {
+            return LaneChangeDecision.MANDATORY_TO_RIGHT;
+        } else if (direction == Lanes.TO_LEFT) {
+            return LaneChangeDecision.MANDATORY_TO_LEFT;
+        }
+        return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
+    }
+
+    private LaneChangeDecision moveToExitLane(RoadSegment roadSegment, int currentLane) {
+        int exitLane = getExitLane(roadSegment);
+        if (exitLane >= 0) {
+            int dir = exitLane - currentLane > 0 ? Lanes.TO_RIGHT : Lanes.TO_LEFT;
+            // evaluate situation on the target lane
+            final LaneSegment newLaneSegment = roadSegment.laneSegment(currentLane + dir);
+            if (isSafeLaneChange(newLaneSegment)) {
+                return directionToMandatoryDecision(dir);
+            }
+        }
+        return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
+    }
+
     private LaneChangeDecision checkForMandatoryLaneChangeToExit(RoadSegment roadSegment) {
         final int currentLane = me.lane();
 
         // consider mandatory lane-change to exit
         if (me.exitRoadSegmentId() == roadSegment.id()) {
-            if (currentLane == roadSegment.laneCount()
-                    && roadSegment.laneSegment(roadSegment.laneCount()).type() == Lanes.Type.EXIT) {
+            if (roadSegment.laneSegment(currentLane).type() == Lanes.Type.EXIT) {
                 // already in exit lane, so do not move out of it
                 return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
-            } else if (currentLane < roadSegment.laneCount()) {
-                // evaluate situation on the right lane
-                final LaneSegment newLaneSegment = roadSegment.laneSegment(currentLane + Lanes.TO_RIGHT);
-                if (isSafeLaneChange(newLaneSegment)) {
-                    return LaneChangeDecision.MANDATORY_TO_RIGHT;
-                }
-                return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
             }
+            return moveToExitLane(roadSegment, currentLane);
         }
 
         // consider mandatory lane-change to exit on next road segment ahead
@@ -328,17 +353,43 @@ public class LaneChangeModel {
             // next road segment is the exit segment
             final double distanceToExit = roadSegment.roadLength() - me.getFrontPosition();
             if (distanceToExit < distanceBeforeExitMustChangeLanes) {
-                if (currentLane == roadSegment.laneCount()) {
-                    // already in exit lane, so do not move out of it
-                    return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
-                } else if (currentLane < roadSegment.laneCount()) {
-                    final LaneSegment newLaneSegment = roadSegment.laneSegment(currentLane + Lanes.TO_RIGHT);
-                    if (isSafeLaneChange(newLaneSegment)) {
-                        return LaneChangeDecision.MANDATORY_TO_RIGHT;
-                    }
-                    return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
-                }
+                return moveToExitLane(roadSegment, currentLane);
             }
+            // final int currentLane = me.lane();
+            //
+            // // consider mandatory lane-change to exit
+            // if (me.exitRoadSegmentId() == roadSegment.id()) {
+            // if (currentLane == roadSegment.laneCount()
+            // && roadSegment.laneSegment(roadSegment.laneCount()).type() == Lanes.Type.EXIT) {
+            // // already in exit lane, so do not move out of it
+            // return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
+            // } else if (currentLane < roadSegment.laneCount()) {
+            // // evaluate situation on the right lane
+            // final LaneSegment newLaneSegment = roadSegment.laneSegment(currentLane + Lanes.TO_RIGHT);
+            // if (isSafeLaneChange(newLaneSegment)) {
+            // return LaneChangeDecision.MANDATORY_TO_RIGHT;
+            // }
+            // return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
+            // }
+            // }
+            //
+            // // consider mandatory lane-change to exit on next road segment ahead
+            // final LaneSegment sinkLaneSegment = roadSegment.laneSegment(currentLane).sinkLaneSegment();
+            // if (sinkLaneSegment != null && me.exitRoadSegmentId() == sinkLaneSegment.roadSegment().id()) {
+            // // next road segment is the exit segment
+            // final double distanceToExit = roadSegment.roadLength() - me.getFrontPosition();
+            // if (distanceToExit < distanceBeforeExitMustChangeLanes) {
+            // if (currentLane == roadSegment.laneCount()) {
+            // // already in exit lane, so do not move out of it
+            // return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
+            // } else if (currentLane < roadSegment.laneCount()) {
+            // final LaneSegment newLaneSegment = roadSegment.laneSegment(currentLane + Lanes.TO_RIGHT);
+            // if (isSafeLaneChange(newLaneSegment)) {
+            // return LaneChangeDecision.MANDATORY_TO_RIGHT;
+            // }
+            // return LaneChangeDecision.MANDATORY_STAY_IN_LANE;
+            // }
+            // }
         }
         return LaneChangeDecision.NONE;
     }

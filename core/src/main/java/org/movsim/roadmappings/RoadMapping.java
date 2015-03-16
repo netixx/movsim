@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import org.movsim.simulator.roadnetwork.Lanes;
 import org.movsim.simulator.vehicles.Vehicle;
 
+import fr.netixx.AutoTopo.adapters.IDirection;
+
 /**
  * A RoadMapping maps a logical road position (given by a lane and a position on a road segment) onto a physical
  * position, that is an x,y coordinate (given in meters).
@@ -116,7 +118,7 @@ public abstract class RoadMapping {
      * the x-axis (3 o'clock position).
      * </p>
      */
-    public static class PosTheta {
+    public static class PosTheta implements IDirection {
         /**
          * x-coordinate of point.
          */
@@ -141,6 +143,26 @@ public abstract class RoadMapping {
          */
         public double theta() {
             return Math.atan2(sinTheta, cosTheta);
+        }
+
+        @Override
+        public double cosTheta() {
+            return cosTheta;
+        }
+
+        @Override
+        public double sinTheta() {
+            return sinTheta;
+        }
+
+        @Override
+        public double getLongitudeProjection(double value) {
+            return value * cosTheta;
+        }
+
+        @Override
+        public double getLatitudeProjection(double value) {
+            return value * sinTheta;
         }
     }
 
@@ -507,5 +529,10 @@ public abstract class RoadMapping {
         final RoadMapping.PosTheta posTheta = map(vehicle.physicalQuantities().getMidPosition(),
                 laneOffset(vehicle.getContinousLane()));
         return mapFloat(posTheta, vehicle.physicalQuantities().getLength(), vehicle.physicalQuantities().getWidth());
+    }
+
+    public RoadMapping.PosTheta mapTheta(Vehicle vehicle, double time) {
+        return map(vehicle.physicalQuantities().getMidPosition(),
+                laneOffset(vehicle.getContinousLane()));
     }
 }
