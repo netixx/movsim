@@ -440,7 +440,8 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
                             speedInit);
                     roadSegment.addVehicle(veh);
                     // #AUTOTOPO
-                    AutoTopoLink.getInstance().addVehicle(veh);
+                    veh.setAutoTopoAgent(AutoTopoLink.getInstance().addVehicle(veh));
+                    // AutoTopoLink.getInstance().addVehicle(veh);
                 } else {
                     LOG.debug("cannot add vehicle due to gap constraints at pos={} with speed={}.", position, speedInit);
                 }
@@ -477,6 +478,9 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
                 LOG.info(String.format("and for the CA in physical quantities: front position at x=%.2f, speed=%.2f",
                         veh.physicalQuantities().getFrontPosition(), veh.physicalQuantities().getSpeed()));
             }
+            veh.setAutoTopoAgent(AutoTopoLink.getInstance().addVehicle(veh));
+            veh.updateRealPosition(roadSegment, AutoTopoLink.getInstance().simulationTime());
+
         }
     }
 
@@ -520,27 +524,32 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
         LOG.info(String.format(
                 "time elapsed = %.3fs --> simulation time warp = %.2f, time per 1000 update steps=%.3fs", elapsedTime,
                 simulationTime / elapsedTime, 1000 * elapsedTime / simulationRunnable.iterationCount()));
-        String stat = String.format(
-                "Total Travel Time : %10.0fs, Total Fuel : %10.2fl, Total Travel Distance : %10.0fkm",
-                roadNetwork.totalVehicleTravelTime(), roadNetwork.totalVehicleFuelUsedLiters(),
-                roadNetwork.totalVehicleTravelDistance() * Units.M_TO_KM
-);
+//        String stat = String.format(
+//                "Total Travel Time : %10.0fs, Total Fuel : %10.2fl, Total Travel Distance : %10.0fkm",
+//                roadNetwork.totalVehicleTravelTime(), roadNetwork.totalVehicleFuelUsedLiters(),
+//                roadNetwork.totalVehicleTravelDistance() * Units.M_TO_KM
+        // );
         LOG.info(String.format("Total Travel Time : %10.0fs, Total Fuel : %10.2fl, Total Travel Distance : %10.0fkm",
                 roadNetwork.totalVehicleTravelTime(), roadNetwork.totalVehicleFuelUsedLiters(),
                 roadNetwork.totalVehicleTravelDistance() * Units.M_TO_KM));
-        LOG.error(String.format("%f;%f;%f;%f;%f", roadNetwork.totalVehicleTravelTime(),
-                roadNetwork.totalVehicleTravelDistance() * Units.M_TO_KM, roadNetwork.totalVehicleFuelUsedLiters(),
-                roadNetwork.totalVehiclePlusAcceleration(), roadNetwork.totalVehicleMinusAcceleration()));
+        // LOG.error(String.format("%f;%f;%f;%f;%f", roadNetwork.totalVehicleTravelTime(),
+        // roadNetwork.totalVehicleTravelDistance() * Units.M_TO_KM, roadNetwork.totalVehicleFuelUsedLiters(),
+        // roadNetwork.totalVehiclePlusAcceleration(), roadNetwork.totalVehicleMinusAcceleration()));
 
-        // TODO : write to csv
-        Path speedPath = Paths.get(projectMetaData.getOutputPath() + "/speed.csv");
-        Path travelTimePath = Paths.get(projectMetaData.getOutputPath() + "/time.csv");
-        Path accPath = Paths.get(projectMetaData.getOutputPath() + "/acceleration.csv");
-        Speed.getInstance().toCsv(speedPath);
-        TravelTime.getInstance().toCsv(travelTimePath);
-        Acceleration.getInstance().toCsv(accPath);
+        try {
+            // TODO : write to csv
+            Path speedPath = Paths.get(projectMetaData.getOutputPath() + "/speed.csv");
+            Path travelTimePath = Paths.get(projectMetaData.getOutputPath() + "/time.csv");
+            Path accPath = Paths.get(projectMetaData.getOutputPath() + "/acceleration.csv");
+            Speed.getInstance().toCsv(speedPath);
+            TravelTime.getInstance().toCsv(travelTimePath);
+            Acceleration.getInstance().toCsv(accPath);
 
-        AutoTopoLink.getInstance().writeStats();
+            AutoTopoLink.getInstance().writeStats(projectMetaData.getOutputPath());
+        } catch (Exception e) {
+            LOG.error("Could not write statistics");
+            e.printStackTrace();
+        }
     }
 
     @Override

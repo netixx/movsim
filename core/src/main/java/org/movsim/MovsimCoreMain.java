@@ -70,9 +70,9 @@ public class MovsimCoreMain {
         }
 
         LogFileAppender.initialize(ProjectMetaData.getInstance());
-
         final Simulator simulator = new Simulator();
         simulator.initialize();
         simulator.runToCompletion();
+
     }
 }

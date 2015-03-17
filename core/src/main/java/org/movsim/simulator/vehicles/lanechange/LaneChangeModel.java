@@ -25,7 +25,6 @@
  */
 package org.movsim.simulator.vehicles.lanechange;
 
-import org.movsim.autotopo.AutoTopoLink;
 import org.movsim.simulator.roadnetwork.LaneSegment;
 import org.movsim.simulator.roadnetwork.Lanes;
 import org.movsim.simulator.roadnetwork.Lanes.Type;
@@ -304,7 +303,7 @@ public class LaneChangeModel {
         return bias;
     }
 
-    private int getExitLane(RoadSegment roadSegment) {
+    private static int getExitLane(RoadSegment roadSegment) {
         for (LaneSegment laneSegment : roadSegment.laneSegments()) {
             if (laneSegment.type() == Type.EXIT) {
                 return laneSegment.lane();
@@ -466,7 +465,8 @@ public class LaneChangeModel {
 
     private LaneChangeDecision determineDiscretionaryLaneChangeDirection(RoadSegment roadSegment) {
         final int currentLane = me.lane();
-        LaneChangeGoal laneChangeDecision = AutoTopoLink.getInstance().getLaneChangeGoal(me);
+        LaneChangeGoal laneChangeDecision = me.getAutoTopoLaneChangeGoal();
+        // LaneChangeGoal laneChangeDecision = AutoTopoLink.getInstance().getLaneChangeGoal(me);
         switch (laneChangeDecision) {
         case STAY:
             return LaneChangeDecision.STAY_IN_LANE;
@@ -535,7 +535,8 @@ public class LaneChangeModel {
     private static final double autoTopoBias = 1000;
 
     protected double biasForAutoTopoGoal(int direction) {
-        LaneChangeGoal laneChangeGoal = AutoTopoLink.getInstance().getLaneChangeGoal(me);
+        LaneChangeGoal laneChangeGoal = me.getAutoTopoLaneChangeGoal();
+        // LaneChangeGoal laneChangeGoal = AutoTopoLink.getInstance().getLaneChangeGoal(me);
         // if they agree : + bias
         if ((direction == Lanes.TO_LEFT && laneChangeGoal == LaneChangeGoal.LEFT)
                 || (direction == Lanes.TO_RIGHT && laneChangeGoal == LaneChangeGoal.RIGHT)) {

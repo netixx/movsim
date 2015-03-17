@@ -54,11 +54,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import fr.netixx.AutoTopo.adapters.IAgent;
 import fr.netixx.AutoTopo.adapters.IDirection;
 import fr.netixx.AutoTopo.adapters.IVehicleAdapter;
 import fr.netixx.AutoTopo.adapters.IVehicleRevAdapter;
 import fr.netixx.AutoTopo.adapters.impl.movsim.ScopeDecorator;
 import fr.netixx.AutoTopo.notifications.aggregation.Direction;
+import fr.netixx.AutoTopo.notifications.goals.LaneChangeGoal;
+import fr.netixx.AutoTopo.notifications.goals.SpeedGoal;
 
 /**
  * <p>
@@ -1249,6 +1252,7 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
      * #AUTOTOPO Vehicle modification
      */
 
+    private IAgent autotopoAgent;
     private double xPosition;
     private double yPosition;
 
@@ -1261,6 +1265,10 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
     private int autoTopoId;
 
     public static final int SCOPE_NONE = 0;
+
+    public void setAutoTopoAgent(IAgent agent) {
+        this.autotopoAgent = agent;
+    }
 
     public void updateRealPosition(RoadSegment roadSegment, double simulationTime) {
         PolygonFloat realPosition = roadSegment.roadMapping().mapFloat(this, simulationTime);
@@ -1305,28 +1313,12 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
 
     @Override
     public int getScopeId() {
-        return this.scopeId;
-    }
-
-    @Override
-    public double getAutoTopoLat() {
-        return this.getLat();
-    }
-
-    @Override
-    public double getAutoTopoLong() {
-        return this.getLong();
+        return this.autotopoAgent.getScopeId();
     }
 
     @Override
     public int getAutoTopoId() {
-        return autoTopoId;
-    }
-
-    @Override
-    public void setAutoTopoId(int id) {
-        autoTopoId = id;
-
+        return this.autotopoAgent.getId();
     }
 
     @Override
@@ -1411,4 +1403,24 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
     public double getAcceleration() {
         return this.getAcc();
     }
+
+    @Override
+    public SpeedGoal getAutoTopoSpeedGoal() {
+        if (this.autotopoAgent != null) {
+            return this.autotopoAgent.getGoalSpeed();
+        }
+        LOG.error("AutoTopo agent is null");
+        return null;
+
+    }
+
+    @Override
+    public LaneChangeGoal getAutoTopoLaneChangeGoal() {
+        if (this.autotopoAgent != null) {
+            return this.autotopoAgent.getGoalLaneChange();
+        }
+        LOG.error("AutoTopo agent is null");
+        return null;
+    }
+
 }

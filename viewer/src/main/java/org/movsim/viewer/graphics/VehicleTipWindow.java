@@ -95,8 +95,8 @@ class VehicleTipWindow extends Window {
                 vehicle.getAutoTopoId(),
                 vehicle.getScopeId(), vehicle.getLabel(),
                 vehicle.lane(),
-                vehicle.getAutoTopoLong(),
-                vehicle.getAutoTopoLat(), vehiclePhysical.getSpeed()
+                vehicle.getLong(), vehicle.getLat(),
+                vehiclePhysical.getSpeed()
                 * Units.MS_TO_KMH, vehiclePhysical.getAcc(), vehicle.totalTravelDistance(), exitString);
         final JLabel label = new JLabel(string, Label.LEFT);
         label.setBackground(new Color(200, 220, 240));

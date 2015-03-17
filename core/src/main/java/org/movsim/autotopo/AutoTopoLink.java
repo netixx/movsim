@@ -8,11 +8,8 @@ import org.movsim.simulator.roadnetwork.routing.Route;
 import org.movsim.simulator.roadnetwork.routing.Routing;
 import org.movsim.simulator.vehicles.Vehicle;
 
-import fr.netixx.AutoTopo.adapters.IVehicleAdapter;
+import fr.netixx.AutoTopo.adapters.IAgent;
 import fr.netixx.AutoTopo.adapters.impl.movsim.AutoTopoMovsimController;
-import fr.netixx.AutoTopo.notifications.goals.AccelerationGoal;
-import fr.netixx.AutoTopo.notifications.goals.LaneChangeGoal;
-import fr.netixx.AutoTopo.notifications.goals.SpeedGoal;
 
 public class AutoTopoLink implements SimulationTimeStep {
 
@@ -37,8 +34,8 @@ public class AutoTopoLink implements SimulationTimeStep {
         return instance;
     }
 
-    public void addVehicle(Vehicle vh) {
-        controller.addVehicle(vh);
+    public IAgent addVehicle(Vehicle vh) {
+        return controller.addVehicle(vh);
     }
 
     public void removeVehicle(Vehicle vh) {
@@ -78,17 +75,17 @@ public class AutoTopoLink implements SimulationTimeStep {
         }
     }
 
-    public LaneChangeGoal getLaneChangeGoal(IVehicleAdapter me) {
-        return controller.getLaneChangeGoal(me);
-    }
+    // public LaneChangeGoal getLaneChangeGoal(IVehicleAdapter me) {
+    // return controller.getLaneChangeGoal(me);
+    // }
 
-    public SpeedGoal getSpeedGoal(IVehicleAdapter vh) {
-        return controller.getSpeedGoal(vh);
-    }
+    // public SpeedGoal getSpeedGoal(IVehicleAdapter vh) {
+    // return controller.getSpeedGoal(vh);
+    // }
 
-    public AccelerationGoal getAccelerationGoal(IVehicleAdapter vh) {
-        return controller.getAccelerationGoal(vh);
-    }
+    // public AccelerationGoal getAccelerationGoal(IVehicleAdapter vh) {
+    // return controller.getAccelerationGoal(vh);
+    // }
 
     private Routing routing;
 
@@ -103,8 +100,8 @@ public class AutoTopoLink implements SimulationTimeStep {
         return null;
     }
 
-    public void writeStats() {
-        controller.writeStats();
+    public void writeStats(String path) {
+        controller.writeStats(path);
 
     }
 

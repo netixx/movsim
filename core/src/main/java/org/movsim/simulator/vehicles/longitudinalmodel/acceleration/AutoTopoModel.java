@@ -1,7 +1,6 @@
 package org.movsim.simulator.vehicles.longitudinalmodel.acceleration;
 
 import org.movsim.autogen.ModelParameterAT;
-import org.movsim.autotopo.AutoTopoLink;
 import org.movsim.simulator.vehicles.Vehicle;
 import org.movsim.simulator.vehicles.longitudinalmodel.acceleration.parameter.IModelParameterAT;
 import org.slf4j.Logger;
@@ -100,7 +99,8 @@ public class AutoTopoModel extends LongitudinalModelBase {
 
     @Override
     public double calcAcc(Vehicle me, Vehicle frontVehicle, double alphaT, double alphaV0, double alphaA) {
-        SpeedGoal speedGoal = AutoTopoLink.getInstance().getSpeedGoal(me);
+        // SpeedGoal speedGoal = AutoTopoLink.getInstance().getSpeedGoal(me);
+        SpeedGoal speedGoal = me.getAutoTopoSpeedGoal();
         // Local dynamical variables
         final double s = me.getNetDistance(frontVehicle);
         final double v = me.getSpeed();
@@ -116,10 +116,11 @@ public class AutoTopoModel extends LongitudinalModelBase {
         // me.getPosition(), me.getSpeed(), alphaT, alphaV0, T, Tlocal);
         // }
         // consider external speedlimit
-        double v0Local = Math.min(alphaV0 * getDesiredSpeed(), me.getSpeedlimit());
-        if (speedGoal != null) {
-            v0Local = Math.min(me.getSpeedlimit(), speedGoal.getSpeed());
-        }
+        final double v0Local = speedGoal != null ? Math.min(me.getSpeedlimit(), speedGoal.getSpeed()) : Math.min(
+                alphaV0 * getDesiredSpeed(), me.getSpeedlimit());
+        // if (speedGoal != null) {
+        // v0Local = Math.min(me.getSpeedlimit(), speedGoal.getSpeed());
+        // }
         final double aLocal = alphaA * param.getA();
 
         return acc(s, v, dv, aLead, Tlocal, v0Local, aLocal);

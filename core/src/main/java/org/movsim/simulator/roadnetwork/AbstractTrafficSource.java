@@ -113,8 +113,9 @@ public abstract class AbstractTrafficSource implements SimulationTimeStep {
         // System.out.println("Insert vh " + vehicle.getId() + "@" + vehicle.getFrontPosition());
         // #AUTOTOPO
         // TODO: AUTOTOPO change!
+        vehicle.setAutoTopoAgent(AutoTopoLink.getInstance().addVehicle(vehicle));
         vehicle.updateRealPosition(laneSegment.roadSegment(), AutoTopoLink.getInstance().simulationTime());
-        AutoTopoLink.getInstance().addVehicle(vehicle);
+
         TravelTime.getInstance().recordEntry(vehicle, AutoTopoLink.getInstance().simulationTime());
         return vehicle;
     }
