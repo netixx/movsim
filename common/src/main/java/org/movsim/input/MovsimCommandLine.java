@@ -2,25 +2,25 @@
  * Copyright (C) 2010, 2011, 2012 by Arne Kesting, Martin Treiber, Ralph Germ, Martin Budden
  * <movsim.org@gmail.com>
  * -----------------------------------------------------------------------------------------
- * 
+ *
  * This file is part of
- * 
+ *
  * MovSim - the multi-model open-source vehicular-traffic simulator.
- * 
+ *
  * MovSim is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * MovSim is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with MovSim. If not, see <http://www.gnu.org/licenses/>
  * or <http://www.movsim.org>.
- * 
+ *
  * -----------------------------------------------------------------------------------------
  */
 package org.movsim.input;
@@ -60,11 +60,11 @@ public class MovsimCommandLine {
 
     /**
      * Constructor.
-     * 
+     *
      * Intitializes logger and localization.
-     * 
+     *
      * Parses command line and sets results in ProjectMetaData.
-     * 
+     *
      * @param args
      *            the args
      */
@@ -75,7 +75,7 @@ public class MovsimCommandLine {
 
     /**
      * Parse the command line.
-     * 
+     *
      * @param args
      *            the args
      * @throws ParseException
@@ -108,11 +108,18 @@ public class MovsimCommandLine {
         OptionBuilder.withDescription("argument is the output path relative to calling directory");
         final Option outputPathOption = OptionBuilder.create("o");
         options.addOption(outputPathOption);
+
+        OptionBuilder.withArgName("autotopo");
+        OptionBuilder.hasArg();
+        OptionBuilder.withDescription("path to the AutoTopo config file (.properties)");
+        final Option autoTopoConfigPath = OptionBuilder.create("a");
+        options.addOption(autoTopoConfigPath);
+
     }
 
     /**
      * Parses the command line.
-     * 
+     *
      * @param cmdline
      *            the cmdline
      */
@@ -129,8 +136,16 @@ public class MovsimCommandLine {
         if (cmdline.hasOption("l")) {
             optWriteLoggingProperties();
         }
+        if (cmdline.hasOption("a")) {
+            optSetAutoTopoConfigPath(cmdline);
+        }
         requiredOptionOutputPath(cmdline);
         requiredOptionSimulation(cmdline);
+    }
+
+    private void optSetAutoTopoConfigPath(CommandLine cmdline) {
+        String outPath = cmdline.getOptionValue('a');
+        ProjectMetaData.getInstance().setAutoTopoConfigPath(outPath);
     }
 
     /**
@@ -181,7 +196,7 @@ public class MovsimCommandLine {
 
     /**
      * Option simulation.
-     * 
+     *
      * @param cmdline
      *            the cmdline
      */

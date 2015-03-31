@@ -2,25 +2,25 @@
  * Copyright (C) 2010, 2011, 2012 by Arne Kesting, Martin Treiber, Ralph Germ, Martin Budden
  * <movsim.org@gmail.com>
  * -----------------------------------------------------------------------------------------
- * 
+ *
  * This file is part of
- * 
+ *
  * MovSim - the multi-model open-source vehicular-traffic simulator.
- * 
+ *
  * MovSim is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * MovSim is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with MovSim. If not, see <http://www.gnu.org/licenses/>
  * or <http://www.movsim.org>.
- * 
+ *
  * -----------------------------------------------------------------------------------------
  */
 package org.movsim.input;
@@ -34,10 +34,10 @@ import org.joda.time.format.ISODateTimeFormat;
 
 /**
  * Container for some shared information. Singleton pattern.
- * 
+ *
  * <br>
  * created: Mar 9, 2013<br>
- * 
+ *
  */
 // TODO this class deperately needs a throughout refactoring !!!
 public final class ProjectMetaData {
@@ -64,6 +64,8 @@ public final class ProjectMetaData {
 
     private long timeOffsetMillis = 0;
 
+    private String autoTopoConfigPath;
+
     /**
      * Needed for Applet. Change to true, if you cannot access the file system.
      * Allows to read the config files from resources instead.
@@ -87,7 +89,7 @@ public final class ProjectMetaData {
 
     /**
      * Gets the single instance of ProjectMetaData.
-     * 
+     *
      * @return single instance of ProjectMetaData
      */
     public static ProjectMetaData getInstance() {
@@ -107,7 +109,7 @@ public final class ProjectMetaData {
 
     /**
      * Sets the project name.
-     * 
+     *
      * @param projectName
      *            the new project name
      */
@@ -130,7 +132,7 @@ public final class ProjectMetaData {
 
     /**
      * Sets the path to project xml file.
-     * 
+     *
      * @param pathToProjectXmlFile
      *            the new path to project xml file
      */
@@ -151,7 +153,7 @@ public final class ProjectMetaData {
 
     /**
      * Sets the output path.
-     * 
+     *
      * @param outputPath
      *            the new output path
      */
@@ -189,7 +191,7 @@ public final class ProjectMetaData {
 
     /**
      * Sets the instantaneous file output.
-     * 
+     *
      * @param instantaneousFileOutput
      *            the new instantaneous file output
      */
@@ -203,7 +205,7 @@ public final class ProjectMetaData {
 
     /**
      * Sets the xml from resources. Xml config files are read from resources.
-     * 
+     *
      * @param xmlFromResources
      *            the new xml from resources
      */
@@ -321,5 +323,13 @@ public final class ProjectMetaData {
     public String getFormatedTimeWithOffset(double simulationTime) {
         DateTime dateTime = new DateTime(timeOffsetMillis + Math.round(1000 * simulationTime), DateTimeZone.UTC);
         return ISODateTimeFormat.dateTimeNoMillis().print(dateTime);
+    }
+
+    public String getAutoTopoConfigPath() {
+        return autoTopoConfigPath;
+    }
+
+    public void setAutoTopoConfigPath(String autoTopoConfigPath) {
+        this.autoTopoConfigPath = autoTopoConfigPath;
     }
 }

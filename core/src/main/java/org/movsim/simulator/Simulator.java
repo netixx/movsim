@@ -72,6 +72,8 @@ import org.movsim.simulator.vehicles.Vehicle;
 import org.movsim.simulator.vehicles.VehicleFactory;
 import org.movsim.statistics.Acceleration;
 import org.movsim.statistics.Speed;
+import org.movsim.statistics.TimeNumber;
+import org.movsim.statistics.TimePositions;
 import org.movsim.statistics.TravelTime;
 import org.movsim.utilities.MyRandom;
 import org.movsim.utilities.Units;
@@ -541,9 +543,13 @@ public class Simulator implements SimulationTimeStep, SimulationRun.CompletionCa
             Path speedPath = Paths.get(projectMetaData.getOutputPath() + "/speed.csv");
             Path travelTimePath = Paths.get(projectMetaData.getOutputPath() + "/time.csv");
             Path accPath = Paths.get(projectMetaData.getOutputPath() + "/acceleration.csv");
+            Path timePath = Paths.get(projectMetaData.getOutputPath() + "/positions.csv");
+            Path numberPath = Paths.get(projectMetaData.getOutputPath() + "/numbers.csv");
             Speed.getInstance().toCsv(speedPath);
+            TimePositions.getInstance().toCsv(timePath);
             TravelTime.getInstance().toCsv(travelTimePath);
             Acceleration.getInstance().toCsv(accPath);
+            TimeNumber.getInstance().toCsv(numberPath);
 
             AutoTopoLink.getInstance().writeStats(projectMetaData.getOutputPath());
         } catch (Exception e) {

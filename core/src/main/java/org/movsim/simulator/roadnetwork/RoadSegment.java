@@ -872,6 +872,7 @@ public class RoadSegment extends DefaultWeightedEdge implements Iterable<Vehicle
                 vehicle.updateRealPosition(this, simulationTime);
                 vehicle.routeDetermineExitRoadSegmentId();
                 org.movsim.statistics.Speed.getInstance().log(vehicle, vehicle.getSpeed());
+                org.movsim.statistics.TimePositions.getInstance().log(vehicle, simulationTime);
                 // if (vehicle instanceof AutoTopoVehicle) {
                 // // needed to calculate actual absolute position
                 // ((AutoTopoVehicle) vehicle).setRoadSegment(this);

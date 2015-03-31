@@ -2,6 +2,7 @@ package org.movsim.autotopo;
 
 import java.io.IOException;
 
+import org.movsim.input.ProjectMetaData;
 import org.movsim.simulator.SimulationRunnable;
 import org.movsim.simulator.SimulationTimeStep;
 import org.movsim.simulator.roadnetwork.routing.Route;
@@ -22,7 +23,11 @@ public class AutoTopoLink implements SimulationTimeStep {
     private AutoTopoMovsimController controller;
 
     private AutoTopoLink() {
-        controller = new AutoTopoMovsimController();
+        String[] opts = null;
+        if (ProjectMetaData.getInstance().getAutoTopoConfigPath() != null) {
+            opts = new String[] { "--config", ProjectMetaData.getInstance().getAutoTopoConfigPath() };
+        }
+        controller = new AutoTopoMovsimController(opts);
     }
 
     private static AutoTopoLink instance;

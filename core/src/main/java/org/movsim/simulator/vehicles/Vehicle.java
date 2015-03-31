@@ -1423,4 +1423,9 @@ public class Vehicle implements IVehicleAdapter, IVehicleRevAdapter {
         return null;
     }
 
+    @Override
+    public double getCurvAbsc() {
+        return this.totalTravelDistance;
+    }
+
 }

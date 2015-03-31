@@ -31,6 +31,7 @@ import java.util.Iterator;
 
 import org.movsim.simulator.SimulationTimeStep;
 import org.movsim.simulator.roadnetwork.routing.Route;
+import org.movsim.statistics.TimeNumber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -231,6 +232,7 @@ public class RoadNetwork implements SimulationTimeStep, Iterable<RoadSegment> {
         for (final RoadSegment roadSegment : roadSegments) {
             roadSegment.updateDetectors(dt, simulationTime, iterationCount);
         }
+        TimeNumber.getInstance().log(simulationTime, this.vehicleCount());
     }
 
     public void setWithCrashExit(boolean isWithCrashExit) {
