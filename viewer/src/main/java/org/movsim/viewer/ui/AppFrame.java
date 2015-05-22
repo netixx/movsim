@@ -112,6 +112,7 @@ public class AppFrame extends JFrame {
         } else {
             setSize(xPixSize, yPixSize);
         }
+        setLocation(Integer.parseInt(properties.getProperty("xPosWindow")), Integer.parseInt(properties.getProperty("yPosWindow")));
     }
 
     private void addMenu(ResourceBundle resourceBundle, Simulator simulator, TrafficCanvas trafficCanvas,

@@ -69,8 +69,12 @@ public class App {
         
         // parse the command line, putting the results into projectMetaData
         MovsimCommandLine.parse(args);
-        
-        Properties properties = ViewProperties.loadProperties(projectMetaData);
+        Properties properties;
+        if (ProjectMetaData.getInstance().getViewerConfigPath() != null) {
+            properties = ViewProperties.loadProperties(ProjectMetaData.getInstance().getViewerConfigPath());
+        } else {
+            properties= ViewProperties.loadProperties(projectMetaData);
+        }
 
 //        final String path = "sim/buildingBlocks/"; 
 //        String[] resourceListing = getResourceListing(App.class, path);

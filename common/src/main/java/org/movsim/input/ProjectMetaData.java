@@ -65,6 +65,7 @@ public final class ProjectMetaData {
     private long timeOffsetMillis = 0;
 
     private String autoTopoConfigPath;
+    private String viewerConfigPath;
 
     /**
      * Needed for Applet. Change to true, if you cannot access the file system.
@@ -331,5 +332,13 @@ public final class ProjectMetaData {
 
     public void setAutoTopoConfigPath(String autoTopoConfigPath) {
         this.autoTopoConfigPath = autoTopoConfigPath;
+    }
+
+    public String getViewerConfigPath() {
+        return viewerConfigPath;
+    }
+
+    public void setViewerConfigPath(String viewerConfigPath) {
+        this.viewerConfigPath = viewerConfigPath;
     }
 }

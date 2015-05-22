@@ -65,8 +65,6 @@ public class MovsimCommandLine {
      *
      * Parses command line and sets results in ProjectMetaData.
      *
-     * @param args
-     *            the args
      */
     private MovsimCommandLine() {
         createOptions();
@@ -115,6 +113,13 @@ public class MovsimCommandLine {
         final Option autoTopoConfigPath = OptionBuilder.create("a");
         options.addOption(autoTopoConfigPath);
 
+
+        OptionBuilder.withArgName("viewerproperties");
+        OptionBuilder.hasArg();
+        OptionBuilder.withDescription("path to the Viewer config file (.properties)");
+        final Option viewerConfigPath = OptionBuilder.create("e");
+        options.addOption(viewerConfigPath);
+
     }
 
     /**
@@ -139,6 +144,9 @@ public class MovsimCommandLine {
         if (cmdline.hasOption("a")) {
             optSetAutoTopoConfigPath(cmdline);
         }
+        if (cmdline.hasOption("e")) {
+            optSetViewerConfigPath(cmdline);
+        }
         requiredOptionOutputPath(cmdline);
         requiredOptionSimulation(cmdline);
     }
@@ -146,6 +154,11 @@ public class MovsimCommandLine {
     private void optSetAutoTopoConfigPath(CommandLine cmdline) {
         String outPath = cmdline.getOptionValue('a');
         ProjectMetaData.getInstance().setAutoTopoConfigPath(outPath);
+    }
+
+    private void optSetViewerConfigPath(CommandLine cmdline) {
+        String outPath = cmdline.getOptionValue('e');
+        ProjectMetaData.getInstance().setViewerConfigPath(outPath);
     }
 
     /**

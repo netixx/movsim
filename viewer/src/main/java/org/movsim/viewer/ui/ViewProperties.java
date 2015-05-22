@@ -5,6 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Properties;
 
 import org.movsim.input.ProjectMetaData;
@@ -78,6 +82,17 @@ public class ViewProperties {
             logger.info("cannot find "+file.toString()+". Fall back to default properties.");
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        return applicationProps;
+    }
+
+    public static Properties loadProperties(String fullPath) {
+        Properties applicationProps = loadDefaultProperties();
+        final OpenOption options = StandardOpenOption.READ;
+        try {
+            applicationProps.load(Files.newInputStream(Paths.get(fullPath), options));
+        } catch (final IOException e) {
+            logger.error("Could not read properties file at '{}', using only default properties.", fullPath);
         }
         return applicationProps;
     }
